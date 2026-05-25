@@ -54,3 +54,78 @@ ip -c a
 | --- | --- |
 | enp0s3 | NAT |
 | enp0s8 | Host-Only |
+
+Айпишники назначались через GUI Network Manager-а, nat интерфейс не трогался, на enp0s8 адрес был назначен вручную
+
+Были установлен пакеты dnsmasq nfs-server syslinux
+```bash
+sudo apt-get update && sudo apt-get install dnsmasq nfs-server syslinux
+```
+
+Главная проблема обычной рабочей станции - live initrd, который не умеет в PXE/NFS netboot. Из-за этого была поймана ошибка initramfs: waiting for root
+
+Подготовка ISO
+Каталоги
+```bash
+sudo mkdir -p /root/iso
+```
+```bash
+sudo mkdir -p /srv/alt/ws11
+```
+```bash
+sudo mkdir -p /mnt/ws11
+```
+
+монтирование iso
+```bash
+sudo mount -o loop alt-netinstall.iso /mnt/ws11
+```
+
+копирование содержимого
+cp -r /mnt/ws11/* /srv/alt/ws11/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
