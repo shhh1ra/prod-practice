@@ -222,7 +222,7 @@ sudo chmod -R 755 /srv/tftp
 ```
 ```bash
 sudo chmod -R 755 /srv/alt
-
+```
 
 
 
