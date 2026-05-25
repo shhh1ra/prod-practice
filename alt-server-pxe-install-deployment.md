@@ -18,3 +18,19 @@ sudo nano /etc/xinetd.d/tftp
 ```
 
 `disable = yes` --> `disable = no`
+
+Топология сети:
+Internet
+    |
+  [NAT]
+    |
+ALT Server
+    |
+Host-Only (192.168.56.0/24)
+    |
+Empty VM (PXE Client)
+
+Настройки виртуалок:
+- Alt Server:
+2 ядра, 4 гига оперативы, 40 места на диске, 1. адапрет нат, 2. host-only (192.168.56.1;255.255.255.0)
+- 
