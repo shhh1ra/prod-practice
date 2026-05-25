@@ -82,19 +82,146 @@ sudo mount -o loop alt-netinstall.iso /mnt/ws11
 ```
 
 копирование содержимого
-cp -r /mnt/ws11/* /srv/alt/ws11/
+```bash
+sudo cp -r /mnt/ws11/* /srv/alt/ws11/
+```
 
+проверка
+```bash
+ls /srv/alt/ws11
+```
 
+Обязательно должны быть:
+- boot
+- live
+- syslinux
+- etc
+или похожая installer-структура
 
+настройка nfs
+```bash
+sudo nano /etc/exports
+```
 
+содержимое
+```bash
+/srv/alt/ws11 *(ro,sync,no_subtress_check,no_root_squash)
+```
 
+применение
+```bash
+sudo exportfs -r
+```
+```bash
+sudo systemctl restart nfs-server && sudo systemctl enable nfs-server
+```
 
+проверка
+```bash
+showmount -e localhost
+```
+ожидаемый результат:
+```bash
+/srv/alt/ws11 *
+```
+Проверка версий NFS
+```bash
+rpcinfo -p
+```
+Должны быть: 
+- NFSv3
+- NFSv4
 
+Настройка PXE/TFTP
+Каталоги
+```bash
+sudo mkdir -p /srv/tftp/pxelinux.cfg
+```
+```bash
+sudo mkdir -p /srv/tftp/alt
+```
+поиск pxelinux
+```bash
+sudo find / -name pxelinux.0 2>/dev/null
+```
+копирование
+```bash
+cp /user/lib/PXELINUX/pxelinux.0 /srv/tftp/
+```
 
+В ALT ldlinux.c32 может отсутствовать. Для минимального PXE достаточно pxelinux.0
 
+копирование installer kernel/initrd
 
+поиск
+```bash
+sudo find /srv/alt/ws11 | grep -Ei "vmlinuz|initrd"
+```
+копирование
+```bash
+sudo cp /srv/alt/ws11/mvlinuz /srv/tftp/alt/
+```
+```bash
+sudo cp /srv/alt/ws11/initrd.img /srv/tftp/alt/
+```
 
+проверка
+```bash
+sudo ls /srv/tftp/alt
+```
+Должно быть:
+- vmlinuz
+- initrd.img
+****
+Настройка dnsmasq
 
+```bash
+sudo nano /etc/dnsmasq.conf
+```
+```ini
+port=0
+
+interface=enp0s8
+bind-interface
+
+dhcp-range=192.168.56.100,192.168.56.200,12h
+
+dhcp-boot=pxelinux.0
+
+enable-tftp
+tftp-root=/srv/tftp
+```
+
+Проверка
+```bash
+sudo dnsmasq --test
+```
+
+перезапуск
+```sudo
+systemctl restart dnsmasq && sudo systemctl enable dnsmasq && sudo systemctl status dnsmasq
+```
+
+PXE Config
+```bash
+sudo nano /srv/tftp/pxelinux.cfg/default
+```
+```cfg
+DEFAULT alt
+LABEL alt
+    KERNEL alt/vmlinuz
+    APPEND initrd=alt/inired.uml
+    ip=dhcp
+    root@192.168.56.19:/srv/alt/ws11
+    ramdisk_size=1500000
+```
+
+Права
+```bash
+sudo chmod -R 755 /srv/tftp
+```
+```bash
+sudo chmod -R 755 /srv/alt
 
 
 
