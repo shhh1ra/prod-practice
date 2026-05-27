@@ -1,4 +1,4 @@
-Изучаемый стек:
+192.168.56.1Изучаемый стек:
 - DHCP
 - PXE
 - TFTP
@@ -8,11 +8,12 @@
 Теоретические материалы
 - [Автоинстал дистра](https://docs.altlinux.org/ru-RU/alt-server/11.1/html/alt-server/install-distro--autoinstall--chapter.html)
 - [Загрузка по сети](https://docs.altlinux.org/ru-RU/alt-server/11.1/html/alt-server/netinst.html)
+- [altboot+bootchain](https://www.altlinux.org/Installer/common/altboot#bootchain+altboot)
 
 ```bash
 sudo apt-get update && sudo apt-get install alterator-netinst
 ```
-
+192.168.56.1
 ```bash
 sudo nano /etc/xinetd.d/tftp
 ```
