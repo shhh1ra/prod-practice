@@ -3,18 +3,29 @@
 ## Конфиги и каталоги
 
 ### dnsmasq
-Файл: /etc/dnsmasq.d/pxe-server.conf
-
+- Файл: /etc/dnsmasq.d/pxe-server.conf
+```bash
 interface=enp0s8
 bind-interfaces
+
+# DCHP
 dhcp-range=192.168.56.100,192.168.56.200,12h
 dhcp-boot=pxelinux.0
+
+#TFTP
 enable-tftp
 tftp-root=/srv/pxe
+
+# LOGS
 log-dhcp
-
+```
+- Проверка конфигурации:
+```bash
+dnsmasq --test
+systemctl restart dnsmasq
+journalctl -u dnsmasq -f
+```
 ### PXE каталог
-
 /srv/pxe
 ├── pxelinux.0
 ├── menu.c32
@@ -25,32 +36,28 @@ log-dhcp
     └── server/
 
 ### Metadata
-
+- Каталоги для автоответов: 
 /var/www/html/metadata/
 ├── workstation-p11/
 ├── kworkstation-p11/
 └── server-p11/
 
 ### NFS
-
+Каталоги, в которых находятся распакованные образы.
 /srv/public/netinst/
 ├── workstation/
 ├── kworkstation/
 └── server/
 
-В каталогах находится распакованное содержимое образов.
+
 
 ## Ключевые команды
-
-dnsmasq --test
-systemctl restart dnsmasq
-journalctl -u dnsmasq -f
 
 exportfs -ra
 showmount -e localhost
 
 cat /proc/cmdline
-ls -la /tmp/metadata
+
 
 ## Важные находки
 
