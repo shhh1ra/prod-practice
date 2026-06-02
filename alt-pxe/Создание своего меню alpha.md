@@ -1,4 +1,5 @@
 # PXE-сервер ALT Linux — расширенный отчёт
+добавить граб на eufi
 
 ## Первоначальная настройка
 - Создание всех нужных каталогов:
@@ -19,7 +20,7 @@ sudo apt-get update && sudo apt-get install alterator-netinst
 ```
 
 После установки alterator-netinst заходим в браузер по адресу localhost:8080 и попадаем в веб версию альтератора. Здесь нужно зайти в меню альтератора используя данные рута (root:пароль) и перейти в меню Сервер сетевой установки (Network installation server), импортировать в него образ альт рабочей станции и после с каталога /var/lib/tftpboot командой cp забрать файлы pxelinux.0 и pxelinux.cfg/default и с каталога boot (cd syslinux/boot) забрать файлы initrd.img и vmlinuz, последние 2 файла уникальны для каждой системы. Повторить все шаги для кажого нужного образа.
-
+****
 ## Конфиги и каталоги
 
 ### dnsmasq
@@ -84,9 +85,19 @@ label kworkstation
 	menu label ALT Kworkstation
 	kernel images/kworkstation/vmlinuz
 	append initrd=images/kworkstation/initrd.img fastboot root=bootchain bootchain=fg,altboot stagename=live systemd.unit=install2.target ramdisk_size=3584681 showopts vga=normal quiet splash lowmem automatic=method:nfs,server:192.168.56.10,directory:/srv/public/netinst/kworkstation ip=dhcp tz=Europe/Saratov lang=en_US ai curl=http://192.168.56.10/metadata/kworkstation-p11/
-	
+
+label kworkstation
+	menu label ALT Kworkstation (EFI)
+	kernel images/kworkstation/vmlinuz
+	append initrd=images/kworkstation/initrd.img fastboot root=bootchain bootchain=fg,altboot stagename=live systemd.unit=install2.target ramdisk_size=3584681 showopts vga=normal quiet splash lowmem automatic=method:nfs,server:192.168.56.10,directory:/srv/public/netinst/kworkstation ip=dhcp tz=Europe/Saratov lang=en_US ai curl=http://192.168.56.10/metadata/kworkstation-p11/
+
 label workstation
 	menu label ALT Workstation
+	kernel images/workstation/vmlinuz
+	append initrd=images/workstation/initrd.img fastboot root=bootchain bootchain=fg,altboot stagename=live systemd.unit=install2.target ramdisk_size=1685197 showopts vga=normal quiet splash lowmem automatic=method:nfs,server:192.168.56.10,directory:/srv/public/netinst/workstation ip=dhcp tz=Europe/Saratov lang=en_US ai curl=http://192.168.56.10/metadata/workstation-p11/
+
+label workstation
+	menu label ALT Workstation (EFI)
 	kernel images/workstation/vmlinuz
 	append initrd=images/workstation/initrd.img fastboot root=bootchain bootchain=fg,altboot stagename=live systemd.unit=install2.target ramdisk_size=1685197 showopts vga=normal quiet splash lowmem automatic=method:nfs,server:192.168.56.10,directory:/srv/public/netinst/workstation ip=dhcp tz=Europe/Saratov lang=en_US ai curl=http://192.168.56.10/metadata/workstation-p11/
 	
@@ -100,6 +111,7 @@ label server
 Каталоги, в которых находятся распакованные образы.
 ```
 /srv/public/netinst/
+├── workstation/
 ├── workstation/
 ├── kworkstation/
 └── server/
@@ -142,7 +154,9 @@ server {
 ```
 /var/www/html/metadata/
 ├── workstation-p11/
+├── workstation-p11-efi/
 ├── kworkstation-p11/
+├── kworkstation-p11-efi/
 └── server-p11/
 ```
 - Конфиг autoinstall.scm
@@ -190,6 +204,22 @@ server {
 
 ; Донастройка системы при первом запуске после установки
 ;("/postinstall/firsttime" sctipt "ftp://192.168.0.123/metadata/update.sh")
+```
+- Конфиг vm-profile.scm
+```scheme
+((workstation
+	(title . "Setup for workstation")
+	(action . trivial)
+	(action data ("swap" (size 2097152 . 2097152) (fsim . "SWAPFS") (methods plain))
+				 ("/" (size 2097152 . #t) (fsim . "Ext4") (methods plain)))
+	)
+	
+((server
+	(title . "Setup for server")
+	(action . trivial)
+	(action data ("swap" (size 8388608 . 8388608) (fsim . "SWAPFS") (methods plain))
+				 ("/" (size 8388608 . #t) (fsim . "Ext4") (methods plain)))
+	)
 ```
 ****
 ## Важные находки
