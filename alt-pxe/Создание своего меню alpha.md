@@ -98,10 +98,12 @@ label server
 ****
 ### NFS
 Каталоги, в которых находятся распакованные образы.
+```
 /srv/public/netinst/
 ├── workstation/
 ├── kworkstation/
 └── server/
+```
 - Создание каталога с общим доступом:
 ```bash
 sudo nano /etc/exports
@@ -137,10 +139,12 @@ server {
 }
 ```
 - Каталоги для автоответов: 
+```
 /var/www/html/metadata/
 ├── workstation-p11/
 ├── kworkstation-p11/
 └── server-p11/
+```
 - Конфиг autoinstall.scm
 ```scheme
 ; Установка русского языка
