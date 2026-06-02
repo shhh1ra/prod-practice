@@ -47,6 +47,7 @@ journalctl -u dnsmasq -f
 ```
 ****
 ### PXE каталог
+```
 /srv/pxe
 ├── pxelinux.0
 ├── menu.c32
@@ -55,6 +56,7 @@ journalctl -u dnsmasq -f
     ├── workstation/
     ├── kworkstation/
     └── server/
+```
 - Получение всех нужных файлов:
  ```bash
  sudo cp /usr/lib/syslinux/menu.c32 /srv/pxe
