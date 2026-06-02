@@ -1,5 +1,0 @@
-DEFAULT alt
-
-LABEL alt
-  KERNEL alt/vmlinuz
-  APPEND initrd=initrd.img root=bootchain ip=dhcp ALTBOOT_NFS=192.168.56.10:/srv/public/netinst/current GETIMAGE=altinst
