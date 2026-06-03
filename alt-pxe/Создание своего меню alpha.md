@@ -1,5 +1,4 @@
 # PXE-сервер ALT Linux — расширенный отчёт
-добавить граб на eufi
 
 ## Первоначальная настройка
 - Создание всех нужных каталогов:
@@ -89,7 +88,7 @@ label kworkstation
 label kworkstation
 	menu label ALT Kworkstation (EFI)
 	kernel images/kworkstation/vmlinuz
-	append initrd=images/kworkstation/initrd.img fastboot root=bootchain bootchain=fg,altboot stagename=live systemd.unit=install2.target ramdisk_size=3584681 showopts vga=normal quiet splash lowmem automatic=method:nfs,server:192.168.56.10,directory:/srv/public/netinst/kworkstation ip=dhcp tz=Europe/Saratov lang=en_US ai curl=http://192.168.56.10/metadata/kworkstation-p11/
+	append initrd=images/kworkstation/initrd.img fastboot root=bootchain bootchain=fg,altboot stagename=live systemd.unit=install2.target ramdisk_size=3584681 showopts vga=normal quiet splash lowmem automatic=method:nfs,server:192.168.56.10,directory:/srv/public/netinst/kworkstation ip=dhcp tz=Europe/Saratov lang=en_US ai curl=http://192.168.56.10/metadata/kworkstation-p11-efi/
 
 label workstation
 	menu label ALT Workstation
@@ -99,7 +98,7 @@ label workstation
 label workstation
 	menu label ALT Workstation (EFI)
 	kernel images/workstation/vmlinuz
-	append initrd=images/workstation/initrd.img fastboot root=bootchain bootchain=fg,altboot stagename=live systemd.unit=install2.target ramdisk_size=1685197 showopts vga=normal quiet splash lowmem automatic=method:nfs,server:192.168.56.10,directory:/srv/public/netinst/workstation ip=dhcp tz=Europe/Saratov lang=en_US ai curl=http://192.168.56.10/metadata/workstation-p11/
+	append initrd=images/workstation/initrd.img fastboot root=bootchain bootchain=fg,altboot stagename=live systemd.unit=install2.target ramdisk_size=1685197 showopts vga=normal quiet splash lowmem automatic=method:nfs,server:192.168.56.10,directory:/srv/public/netinst/workstation ip=dhcp tz=Europe/Saratov lang=en_US ai curl=http://192.168.56.10/metadata/workstation-p11-efi/
 	
 label server
 	menu label ALT Server
@@ -153,13 +152,23 @@ server {
 - Каталоги для автоответов: 
 ```
 /var/www/html/metadata/
-├── workstation-p11/
-├── workstation-p11-efi/
-├── kworkstation-p11/
-├── kworkstation-p11-efi/
-└── server-p11/
+|── kworkstation-p11
+│   ├── autoinstall.scm
+│   └── vm-profile.scm
+├── kworkstation-p11-efi
+│   ├── autoinstall.scm
+│   └── vm-profile.scm
+├── server-p11
+│   ├── autoinstall.scm
+│   └── vm-profile.scm
+├── workstation-p11
+│   ├── autoinstall.scm
+│   └── vm-profile.scm
+└── workstation-p11-efi
+    ├── autoinstall.scm
+    └── vm-profile.scm
 ```
-- Конфиг autoinstall.scm
+- Конфиг autoinstall.scm (BIOS)
 ```scheme
 ; Установка русского языка
 ("/sysconfig-base/language" action "write" lang ("ru_RU"))
@@ -205,21 +214,66 @@ server {
 ; Донастройка системы при первом запуске после установки
 ;("/postinstall/firsttime" sctipt "ftp://192.168.0.123/metadata/update.sh")
 ```
+- Конфиг autoinstall.scm (UEFI)
+```scheme
+; Установка русского языка
+("/sysconfig-base/language" action "write" lang ("ru_RU"))
+
+; Настройка смены языка
+("/sysconfig-base/kbd" language ("ru_RU" action "write" layout "alt_shift_toggle"))
+
+; Настройка часового пояса
+("datetime-installer" action "write" commit #t name "RU" zone "Europe/Saratov" utc #t)
+
+; Настройка сети и получение адреса по dhcp
+("/net-eth" action "write" reset #t)
+("/net-eth" action "write" name "enp0s8" ipv "4" controlled "NetworkManager" configuration "dhcp" default "" search "" dns "" computer_name "newhost" ipv_enabled #t)
+("/net-eth" action "write" commit #t)
+
+; Автоматическая разбивка диска
+("/evms/control" action "write" control open installer #t)
+("/evms/control" action "write" control update)
+("/evms/profiles/workstation" action apply commit #f clearall #t exclude ())
+("/evms/control" action "write" control commit)
+("/evms/control" action "write" control close)
+
+; Установка базовых пакетов ОС
+("pkg-install-init" action "write")
+
+; Установка базовой системы
+("/pkg-install" action "write" lists "" auto #t)
+("/preinstall" action "write")
+
+; Установка GRUB в EFI
+("/grub" action "write" device "efi" passwd #f passwd_1 "*" passwd_2 "*")
+
+; Установка пароля рута '123'
+("/root/change_password" passwd_2 "123" passwd_1 "123")
+
+; Создание пользователей
+("/users/create_account" new_name "user" real_name "Пользователь" allow_su #t auto #f passwd_1 "123" passwd_2 "123" autologin #f)
+("/users/create_account" new_name "user2" real_name "Пользователь 2" allow_su #t auto #f passwd_1 "123" passwd_2 "123" autologin #f)
+
+; Донастройка системы при первом запуске после установки
+;("/postinstall/firsttime" sctipt "ftp://192.168.0.123/metadata/update.sh")
+```
 - Конфиг vm-profile.scm
 ```scheme
-((workstation
-	(title . "Setup for workstation")
-	(action . trivial)
-	(action data ("swap" (size 2097152 . 2097152) (fsim . "SWAPFS") (methods plain))
-				 ("/" (size 2097152 . #t) (fsim . "Ext4") (methods plain)))
+(
+	(workstation
+		(title . "Setup for workstation")
+		(action . trivial)
+		(action data ("swap" (size 2097152 . 2097152) (fsim . "SWAPFS") (methods plain))
+					 ("/" (size 2097152 . #t) (fsim . "Ext4") (methods plain)))
 	)
 	
-((server
-	(title . "Setup for server")
-	(action . trivial)
-	(action data ("swap" (size 8388608 . 8388608) (fsim . "SWAPFS") (methods plain))
-				 ("/" (size 8388608 . #t) (fsim . "Ext4") (methods plain)))
+	(server
+		(title . "Setup for server")
+		(action . trivial)
+		(action data ("swap" (size 8388608 . 8388608) (fsim . "SWAPFS") (methods plain))
+					 ("/" (size 8388608 . #t) (fsim . "Ext4") (methods plain)))
 	)
+)
 ```
 ****
 ## Важные находки
